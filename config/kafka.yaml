@@ -1,0 +1,62 @@
+# ─────────────────────────────────────────────────────────────
+# Kafka Configuration
+# Smart Parking Occupancy Analytics — AI372IA
+# ─────────────────────────────────────────────────────────────
+
+bootstrap_servers: "localhost:9092"
+
+topics:
+  raw_events:
+    name: "raw-parking-events"
+    partitions: 4
+    replication_factor: 1
+    retention_ms: 86400000          # 24 hours
+    cleanup_policy: "delete"
+    description: "Raw parking sensor events from all parking lots"
+
+  aggregated_stats:
+    name: "aggregated-occupancy-stats"
+    partitions: 4
+    replication_factor: 1
+    retention_ms: 604800000         # 7 days
+    cleanup_policy: "delete"
+    description: "Processed occupancy statistics from Spark"
+
+  dlq:
+    name: "parking-events-dlq"
+    partitions: 2
+    replication_factor: 1
+    retention_ms: 604800000         # 7 days
+    cleanup_policy: "delete"
+    description: "Dead-letter queue for invalid/unprocessable events"
+
+producer:
+  # Acknowledgement: 'all' = wait for all in-sync replicas (1 here)
+  acks: "all"
+  # Retry on transient failures
+  retries: 3
+  retry_backoff_ms: 100
+  # Compression for efficiency
+  compression_type: "snappy"
+  # Batching for throughput
+  batch_size: 16384
+  linger_ms: 5
+  # Buffer memory
+  buffer_memory: 33554432
+  # Max block on full buffer
+  max_block_ms: 5000
+
+consumer:
+  group_id: "spark-parking-processor"
+  auto_offset_reset: "earliest"
+  enable_auto_commit: false
+  session_timeout_ms: 30000
+  max_poll_records: 500
+
+partitioning:
+  strategy: "lot_id"
+  description: >
+    Events are keyed by lot_id so all events for the same parking lot
+    are routed to the same partition, preserving per-lot ordering.
+    This does NOT automatically implement zone-based partitioning;
+    zone aggregation is performed in Spark.

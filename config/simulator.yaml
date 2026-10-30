@@ -1,0 +1,168 @@
+# ─────────────────────────────────────────────────────────────
+# Simulator Configuration
+# Smart Parking Occupancy Analytics — AI372IA
+# ─────────────────────────────────────────────────────────────
+
+# Schema version
+schema_version: "1.0"
+
+# City context
+city: "Bengaluru"
+city_timezone: "Asia/Kolkata"
+
+# ─── Parking Lots Definition ──────────────────────────────────
+parking_lots:
+  - lot_id: "LOT_KORAMANGALA_01"
+    name: "Koramangala 5th Block Parking"
+    zone_id: "ZONE_SOUTH"
+    latitude: 12.9352
+    longitude: 77.6245
+    capacity: 120
+    lot_type: "surface"
+    num_slots: 120
+
+  - lot_id: "LOT_INDIRANAGAR_01"
+    name: "Indiranagar 100 Feet Road Parking"
+    zone_id: "ZONE_EAST"
+    latitude: 12.9716
+    longitude: 77.6412
+    capacity: 80
+    lot_type: "surface"
+    num_slots: 80
+
+  - lot_id: "LOT_WHITEFIELD_01"
+    name: "Whitefield IT Park Parking"
+    zone_id: "ZONE_EAST"
+    latitude: 12.9698
+    longitude: 77.7500
+    capacity: 200
+    lot_type: "multi-level"
+    num_slots: 200
+
+  - lot_id: "LOT_MG_ROAD_01"
+    name: "MG Road Metro Parking"
+    zone_id: "ZONE_CENTRAL"
+    latitude: 12.9756
+    longitude: 77.6097
+    capacity: 150
+    lot_type: "underground"
+    num_slots: 150
+
+  - lot_id: "LOT_JAYANAGAR_01"
+    name: "Jayanagar 4th Block Parking"
+    zone_id: "ZONE_SOUTH"
+    latitude: 12.9308
+    longitude: 77.5836
+    capacity: 90
+    lot_type: "surface"
+    num_slots: 90
+
+  - lot_id: "LOT_HEBBAL_01"
+    name: "Hebbal Flyover Parking"
+    zone_id: "ZONE_NORTH"
+    latitude: 13.0358
+    longitude: 77.5970
+    capacity: 110
+    lot_type: "surface"
+    num_slots: 110
+
+  - lot_id: "LOT_ELECTRONIC_CITY_01"
+    name: "Electronic City Phase 1 Parking"
+    zone_id: "ZONE_SOUTH"
+    latitude: 12.8456
+    longitude: 77.6603
+    capacity: 180
+    lot_type: "multi-level"
+    num_slots: 180
+
+  - lot_id: "LOT_YELAHANKA_01"
+    name: "Yelahanka New Town Parking"
+    zone_id: "ZONE_NORTH"
+    latitude: 13.1007
+    longitude: 77.5963
+    capacity: 70
+    lot_type: "surface"
+    num_slots: 70
+
+# ─── Traffic Model ────────────────────────────────────────────
+traffic_model:
+  # Morning peak: 07:00 - 10:00 IST
+  morning_peak:
+    start_hour: 7
+    end_hour: 10
+    arrival_rate_multiplier: 3.0
+    departure_rate_multiplier: 0.5
+
+  # Evening peak: 17:00 - 20:00 IST
+  evening_peak:
+    start_hour: 17
+    end_hour: 20
+    arrival_rate_multiplier: 1.5
+    departure_rate_multiplier: 3.0
+
+  # Night: 22:00 - 06:00 IST
+  night:
+    start_hour: 22
+    end_hour: 6
+    arrival_rate_multiplier: 0.1
+    departure_rate_multiplier: 0.1
+
+  # Base arrival probability per slot per second (off-peak)
+  base_arrival_prob: 0.002
+  # Base departure probability per slot per second (off-peak)
+  base_departure_prob: 0.002
+  # Mean parking duration (minutes)
+  mean_parking_duration_minutes: 45
+  # Std dev of parking duration (minutes)
+  std_parking_duration_minutes: 20
+
+# ─── Event Generation ─────────────────────────────────────────
+event_generation:
+  # Default events per second
+  default_rate: 50
+  # Random seed (null = non-reproducible)
+  random_seed: 42
+  # Source tag for all simulated events
+  source_tag: "SIMULATED_SENSOR"
+
+# ─── Fault Injection ─────────────────────────────────────────
+fault_injection:
+  # Probability a sensor generates a duplicate event
+  duplicate_probability: 0.02
+  # Probability a sensor generates a delayed (late) event
+  late_event_probability: 0.03
+  # Max late event delay (seconds)
+  max_late_event_delay_seconds: 180
+  # Probability an event is invalid/malformed
+  invalid_event_probability: 0.01
+  # Probability a sensor fails (stops sending) for a period
+  sensor_failure_probability: 0.001
+  # Probability of out-of-order event
+  out_of_order_probability: 0.02
+
+# ─── Simulation Modes ─────────────────────────────────────────
+modes:
+  normal:
+    events_per_second: 50
+    description: "Normal operation simulation"
+
+  high_load:
+    events_per_second: 500
+    description: "High-load simulation"
+
+  peak_hour:
+    events_per_second: 100
+    morning_peak_multiplier: 5.0
+    description: "Peak-hour simulation"
+
+  fault_injection:
+    events_per_second: 50
+    duplicate_probability: 0.10
+    late_event_probability: 0.15
+    invalid_event_probability: 0.05
+    description: "Fault injection simulation"
+
+  benchmark:
+    events_per_second: 1000
+    random_seed: 12345
+    description: "Reproducible benchmarking mode"

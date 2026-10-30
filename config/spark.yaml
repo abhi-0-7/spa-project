@@ -1,0 +1,99 @@
+# ─────────────────────────────────────────────────────────────
+# Spark Structured Streaming Configuration
+# Smart Parking Occupancy Analytics — AI372IA
+# ─────────────────────────────────────────────────────────────
+
+application:
+  name: "SmartParkingAnalytics"
+  master: "local[*]"
+
+# ─── Memory ───────────────────────────────────────────────────
+memory:
+  driver_memory: "2g"
+  executor_memory: "2g"
+  # Keep JVM overhead reasonable on 16 GB laptop
+  max_result_size: "1g"
+
+# ─── Checkpointing ───────────────────────────────────────────
+checkpointing:
+  base_dir: "./checkpoints"
+  slot_state_dir: "./checkpoints/slot_state"
+  windowed_analytics_dir: "./checkpoints/windowed_analytics"
+  performance_metrics_dir: "./checkpoints/performance_metrics"
+
+# ─── Streaming Triggers ───────────────────────────────────────
+triggers:
+  # Main processing trigger
+  main: "10 seconds"
+  # Analytics aggregation trigger
+  analytics: "30 seconds"
+  # Performance metrics trigger
+  metrics: "60 seconds"
+
+# ─── Kafka Source ─────────────────────────────────────────────
+kafka_source:
+  bootstrap_servers: "localhost:9092"
+  topic: "raw-parking-events"
+  starting_offsets: "latest"
+  max_offsets_per_trigger: 10000
+  fail_on_data_loss: "false"
+
+# ─── Watermarks ───────────────────────────────────────────────
+watermarks:
+  # Allowed lateness for event-time processing
+  default: "2 minutes"
+  # Experimental values for comparison
+  experimental:
+    - "30 seconds"
+    - "1 minute"
+    - "2 minutes"
+    - "5 minutes"
+
+# ─── Windowing ───────────────────────────────────────────────
+windows:
+  tumbling_1min:
+    type: "tumbling"
+    duration: "1 minute"
+    description: "1-minute tumbling window for high-resolution analytics"
+
+  tumbling_5min:
+    type: "tumbling"
+    duration: "5 minutes"
+    description: "5-minute tumbling window for medium-resolution analytics"
+
+  sliding_5min_1min:
+    type: "sliding"
+    duration: "5 minutes"
+    slide: "1 minute"
+    description: "5-minute sliding window, 1-minute slide interval"
+
+  sliding_10min_2min:
+    type: "sliding"
+    duration: "10 minutes"
+    slide: "2 minutes"
+    description: "10-minute sliding window, 2-minute slide interval"
+
+# ─── Deduplication ───────────────────────────────────────────
+deduplication:
+  # Field used as unique event identifier
+  event_id_field: "event_id"
+  # State expiry for dedup state (how long to remember seen IDs)
+  state_expiry: "10 minutes"
+
+# ─── Output Modes ────────────────────────────────────────────
+output:
+  # Slot state: update mode (stateful per-slot)
+  slot_state_mode: "update"
+  # Window analytics: append mode (windows complete and emit once)
+  window_analytics_mode: "append"
+  # DLQ: append mode
+  dlq_mode: "append"
+
+# ─── Spark Config Overrides ───────────────────────────────────
+spark_config:
+  "spark.sql.streaming.schemaInference": "true"
+  "spark.sql.shuffle.partitions": "4"
+  "spark.streaming.kafka.maxRatePerPartition": "2500"
+  "spark.sql.streaming.stateStore.providerClass": "org.apache.spark.sql.execution.streaming.state.HDFSBackedStateStoreProvider"
+  "spark.ui.enabled": "true"
+  "spark.ui.port": "4040"

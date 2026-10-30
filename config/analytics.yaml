@@ -1,0 +1,84 @@
+# ─────────────────────────────────────────────────────────────
+# Analytics Configuration
+# Smart Parking Occupancy Analytics — AI372IA
+# ─────────────────────────────────────────────────────────────
+
+influxdb:
+  url: "http://localhost:8086"
+  # Token loaded from environment: INFLUXDB_TOKEN
+  org: "rvce"
+  bucket: "parking_analytics"
+  # Write batch size
+  batch_size: 500
+  # Flush interval (ms)
+  flush_interval: 1000
+  # Retry on write failure
+  max_retries: 3
+  retry_interval_ms: 500
+
+measurements:
+  # Current state per slot
+  parking_occupancy:
+    name: "parking_occupancy"
+    tags:
+      - "lot_id"
+      - "zone_id"
+      - "city"
+      - "source"
+    fields:
+      - "occupied_slots"
+      - "available_slots"
+      - "capacity"
+      - "occupancy_percentage"
+
+  # Transition events
+  parking_transitions:
+    name: "parking_transitions"
+    tags:
+      - "lot_id"
+      - "zone_id"
+      - "city"
+    fields:
+      - "entries"
+      - "exits"
+      - "net_change"
+
+  # Window-based analytics
+  parking_window_analytics:
+    name: "parking_window_analytics"
+    tags:
+      - "lot_id"
+      - "zone_id"
+      - "city"
+      - "window_type"
+    fields:
+      - "occupied_slots"
+      - "available_slots"
+      - "capacity"
+      - "occupancy_percentage"
+      - "entries"
+      - "exits"
+      - "event_count"
+      - "avg_occupancy_pct"
+      - "max_occupancy_pct"
+      - "min_occupancy_pct"
+
+  # Stream performance
+  stream_performance:
+    name: "stream_performance"
+    tags:
+      - "source"
+    fields:
+      - "events_per_second"
+      - "processing_delay_ms"
+      - "batch_duration_ms"
+      - "invalid_event_count"
+      - "duplicate_event_count"
+      - "late_event_count"
+      - "total_events_processed"
+      - "kafka_consumer_lag"
+
+grafana:
+  url: "http://localhost:3000"
+  # Dashboard auto-refresh interval
+  refresh_interval: "10s"

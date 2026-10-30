@@ -1,0 +1,342 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": true,
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 100,
+      "title": "Main Overview — Real-Time Capacity & Occupancy",
+      "type": "row"
+    },
+    {
+      "datasource": "InfluxDB",
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "mappings": [], "unit": "none" }, "overrides": [] },
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 1 },
+      "id": 1,
+      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "title": "Total Capacity",
+      "type": "stat",
+      "targets": [{ "query": "from(bucket: \"parking\") |> range(start: -5m) |> filter(fn: (r) => r._measurement == \"parking_occupancy\" and r._field == \"capacity\") |> last() |> group() |> sum()", "refId": "A" }]
+    },
+    {
+      "datasource": "InfluxDB",
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "mappings": [], "unit": "none" }, "overrides": [] },
+      "gridPos": { "h": 4, "w": 5, "x": 4, "y": 1 },
+      "id": 2,
+      "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "title": "Currently Occupied Slots",
+      "type": "stat",
+      "targets": [{ "query": "from(bucket: \"parking\") |> range(start: -5m) |> filter(fn: (r) => r._measurement == \"parking_occupancy\" and r._field == \"occupied_slots\") |> last() |> group() |> sum()", "refId": "A" }]
+    },
+    {
+      "datasource": "InfluxDB",
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "mappings": [], "unit": "none" }, "overrides": [] },
+      "gridPos": { "h": 4, "w": 5, "x": 9, "y": 1 },
+      "id": 3,
+      "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "title": "Available Slots",
+      "type": "stat",
+      "targets": [{ "query": "from(bucket: \"parking\") |> range(start: -5m) |> filter(fn: (r) => r._measurement == \"parking_occupancy\" and r._field == \"available_slots\") |> last() |> group() |> sum()", "refId": "A" }]
+    },
+    {
+      "datasource": "InfluxDB",
+      "fieldConfig": {
+        "defaults": {
+          "max": 100,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 60 },
+              { "color": "red", "value": 85 }
+            ]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 5, "x": 14, "y": 1 },
+      "id": 4,
+      "options": { "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "showThresholdLabels": false, "showThresholdMarkers": true },
+      "title": "Overall Occupancy %",
+      "type": "gauge",
+      "targets": [{ "query": "from(bucket: \"parking\") |> range(start: -5m) |> filter(fn: (r) => r._measurement == \"parking_occupancy\" and r._field == \"occupancy_percentage\") |> mean()", "refId": "A" }]
+    },
+    {
+      "datasource": "InfluxDB",
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "mappings": [], "unit": "none" }, "overrides": [] },
+      "gridPos": { "h": 4, "w": 5, "x": 19, "y": 1 },
+      "id": 5,
+      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "title": "Active Parking Lots",
+      "type": "stat",
+      "targets": [{ "query": "from(bucket: \"parking\") |> range(start: -5m) |> filter(fn: (r) => r._measurement == \"parking_occupancy\") |> group(columns: [\"lot_id\"]) |> count() |> group() |> count()", "refId": "A" }]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
+      "id": 200,
+      "title": "Live Analytics — Lot & Zone Dynamics",
+      "type": "row"
+    },
+    {
+      "datasource": "InfluxDB",
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "custom": { "fillOpacity": 80 }, "unit": "percent" }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 6 },
+      "id": 6,
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "single" } },
+      "title": "Occupancy by Parking Lot",
+      "type": "barchart",
+      "targets": [{ "query": "from(bucket: \"parking\") |> range(start: -5m) |> filter(fn: (r) => r._measurement == \"parking_occupancy\" and r._field == \"occupancy_percentage\") |> last() |> group(columns: [\"lot_id\"])", "refId": "A" }]
+    },
+    {
+      "datasource": "InfluxDB",
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "custom": { "fillOpacity": 80 }, "unit": "percent" }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 6 },
+      "id": 7,
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "single" } },
+      "title": "Occupancy by Geographical Zone",
+      "type": "barchart",
+      "targets": [{ "query": "from(bucket: \"parking\") |> range(start: -5m) |> filter(fn: (r) => r._measurement == \"parking_occupancy\" and r._field == \"occupancy_percentage\") |> group(columns: [\"zone_id\"]) |> mean()", "refId": "A" }]
+    },
+    {
+      "datasource": "InfluxDB",
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "short" }, "overrides": [] },
+      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 13 },
+      "id": 8,
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+      "title": "Entries per Minute (1-Min Tumbling Windows)",
+      "type": "timeseries",
+      "targets": [{ "query": "from(bucket: \"parking\") |> range(start: -30m) |> filter(fn: (r) => r._measurement == \"parking_window_analytics\" and r._field == \"entries\")", "refId": "A" }]
+    },
+    {
+      "datasource": "InfluxDB",
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "short" }, "overrides": [] },
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 13 },
+      "id": 9,
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+      "title": "Exits per Minute (1-Min Tumbling Windows)",
+      "type": "timeseries",
+      "targets": [{ "query": "from(bucket: \"parking\") |> range(start: -30m) |> filter(fn: (r) => r._measurement == \"parking_window_analytics\" and r._field == \"exits\")", "refId": "A" }]
+    },
+    {
+      "datasource": "InfluxDB",
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "percent" }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 19 },
+      "id": 10,
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+      "title": "Occupancy Percentage Over Time",
+      "type": "timeseries",
+      "targets": [{ "query": "from(bucket: \"parking\") |> range(start: -1h) |> filter(fn: (r) => r._measurement == \"parking_occupancy\" and r._field == \"occupancy_percentage\") |> aggregateWindow(every: 1m, fn: mean, createEmpty: false)", "refId": "A" }]
+    },
+    {
+      "datasource": "InfluxDB",
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "none" }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 19 },
+      "id": 11,
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+      "title": "Availability Over Time",
+      "type": "timeseries",
+      "targets": [{ "query": "from(bucket: \"parking\") |> range(start: -1h) |> filter(fn: (r) => r._measurement == \"parking_occupancy\" and r._field == \"available_slots\") |> aggregateWindow(every: 1m, fn: mean, createEmpty: false)", "refId": "A" }]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 26 },
+      "id": 300,
+      "title": "Advanced Analytics & Window Comparison",
+      "type": "row"
+    },
+    {
+      "datasource": "InfluxDB",
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "percent" }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 27 },
+      "id": 12,
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+      "title": "Peak Occupancy Periods",
+      "type": "timeseries",
+      "targets": [{ "query": "from(bucket: \"parking\") |> range(start: -2h) |> filter(fn: (r) => r._measurement == \"parking_occupancy\" and r._field == \"occupancy_percentage\") |> aggregateWindow(every: 5m, fn: max, createEmpty: false)", "refId": "A" }]
+    },
+    {
+      "datasource": "InfluxDB",
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "percent" }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 27 },
+      "id": 13,
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+      "title": "Average Occupancy by Lot",
+      "type": "barchart",
+      "targets": [{ "query": "from(bucket: \"parking\") |> range(start: -1h) |> filter(fn: (r) => r._measurement == \"parking_occupancy\" and r._field == \"occupancy_percentage\") |> group(columns: [\"lot_id\"]) |> mean()", "refId": "A" }]
+    },
+    {
+      "datasource": "InfluxDB",
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "none" }, "overrides": [] },
+      "gridPos": { "h": 6, "w": 12, "x": 0, "y": 34 },
+      "id": 14,
+      "options": { "sortBy": [{ "displayName": "Occupancy %", "desc": true }] },
+      "title": "Highest Occupancy Locations",
+      "type": "table",
+      "targets": [{ "query": "from(bucket: \"parking\") |> range(start: -5m) |> filter(fn: (r) => r._measurement == \"parking_occupancy\" and (r._field == \"occupancy_percentage\" or r._field == \"occupied_slots\")) |> last() |> pivot(rowKey:[\"_time\", \"lot_id\"], columnKey: [\"_field\"], valueColumn: \"_value\")", "refId": "A" }]
+    },
+    {
+      "datasource": "InfluxDB",
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "none" }, "overrides": [] },
+      "gridPos": { "h": 6, "w": 12, "x": 12, "y": 34 },
+      "id": 15,
+      "options": { "sortBy": [{ "displayName": "Available Slots", "desc": false }] },
+      "title": "Lowest Availability Locations",
+      "type": "table",
+      "targets": [{ "query": "from(bucket: \"parking\") |> range(start: -5m) |> filter(fn: (r) => r._measurement == \"parking_occupancy\" and (r._field == \"available_slots\" or r._field == \"capacity\")) |> last() |> pivot(rowKey:[\"_time\", \"lot_id\"], columnKey: [\"_field\"], valueColumn: \"_value\")", "refId": "A" }]
+    },
+    {
+      "datasource": "InfluxDB",
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "short" }, "overrides": [] },
+      "gridPos": { "h": 7, "w": 24, "x": 0, "y": 40 },
+      "id": 16,
+      "options": { "legend": { "displayMode": "table", "placement": "bottom" } },
+      "title": "Window Comparison: Tumbling vs Sliding Windows",
+      "type": "timeseries",
+      "targets": [{ "query": "from(bucket: \"parking\") |> range(start: -30m) |> filter(fn: (r) => r._measurement == \"parking_window_analytics\" and r._field == \"event_count\")", "refId": "A" }]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 47 },
+      "id": 400,
+      "title": "Streaming System Health & Telemetry",
+      "type": "row"
+    },
+    {
+      "datasource": "InfluxDB",
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "eps" }, "overrides": [] },
+      "gridPos": { "h": 6, "w": 8, "x": 0, "y": 48 },
+      "id": 17,
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+      "title": "Events Processed per Second (Throughput)",
+      "type": "timeseries",
+      "targets": [{ "query": "from(bucket: \"parking\") |> range(start: -15m) |> filter(fn: (r) => r._measurement == \"stream_performance\" and r._field == \"events_per_second\")", "refId": "A" }]
+    },
+    {
+      "datasource": "InfluxDB",
+      "fieldConfig": {
+        "defaults": {
+          "max": 1000,
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 150 },
+              { "color": "red", "value": 500 }
+            ]
+          },
+          "unit": "ms"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 6, "w": 4, "x": 8, "y": 48 },
+      "id": 18,
+      "options": { "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "showThresholdLabels": false, "showThresholdMarkers": true },
+      "title": "Processing Delay (ms)",
+      "type": "gauge",
+      "targets": [{ "query": "from(bucket: \"parking\") |> range(start: -5m) |> filter(fn: (r) => r._measurement == \"stream_performance\" and r._field == \"processing_delay_ms\") |> last()", "refId": "A" }]
+    },
+    {
+      "datasource": "InfluxDB",
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "short" }, "overrides": [] },
+      "gridPos": { "h": 6, "w": 4, "x": 12, "y": 48 },
+      "id": 19,
+      "options": { "colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "title": "Kafka Ingestion Rate",
+      "type": "stat",
+      "targets": [{ "query": "from(bucket: \"parking\") |> range(start: -5m) |> filter(fn: (r) => r._measurement == \"stream_performance\" and r._field == \"events_per_second\") |> last()", "refId": "A" }]
+    },
+    {
+      "datasource": "InfluxDB",
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "short" }, "overrides": [] },
+      "gridPos": { "h": 3, "w": 4, "x": 16, "y": 48 },
+      "id": 20,
+      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "title": "Invalid Events Count",
+      "type": "stat",
+      "targets": [{ "query": "from(bucket: \"parking\") |> range(start: -1h) |> filter(fn: (r) => r._measurement == \"stream_performance\" and r._field == \"invalid_event_count\") |> sum()", "refId": "A" }]
+    },
+    {
+      "datasource": "InfluxDB",
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "short" }, "overrides": [] },
+      "gridPos": { "h": 3, "w": 4, "x": 20, "y": 48 },
+      "id": 21,
+      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "title": "Duplicate Events Count",
+      "type": "stat",
+      "targets": [{ "query": "from(bucket: \"parking\") |> range(start: -1h) |> filter(fn: (r) => r._measurement == \"stream_performance\" and r._field == \"duplicate_event_count\") |> sum()", "refId": "A" }]
+    },
+    {
+      "datasource": "InfluxDB",
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "short" }, "overrides": [] },
+      "gridPos": { "h": 3, "w": 4, "x": 16, "y": 51 },
+      "id": 22,
+      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "title": "Late Events Count",
+      "type": "stat",
+      "targets": [{ "query": "from(bucket: \"parking\") |> range(start: -1h) |> filter(fn: (r) => r._measurement == \"stream_performance\" and r._field == \"late_event_count\") |> sum()", "refId": "A" }]
+    },
+    {
+      "datasource": "InfluxDB",
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "unit": "ms" }, "overrides": [] },
+      "gridPos": { "h": 3, "w": 4, "x": 20, "y": 51 },
+      "id": 23,
+      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "title": "Batch Processing Duration (ms)",
+      "type": "stat",
+      "targets": [{ "query": "from(bucket: \"parking\") |> range(start: -5m) |> filter(fn: (r) => r._measurement == \"stream_performance\" and r._field == \"batch_duration_ms\") |> last()", "refId": "A" }]
+    },
+    {
+      "datasource": "InfluxDB",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [
+            { "options": { "0": { "color": "red", "index": 0, "text": "DOWN" }, "1": { "color": "green", "index": 1, "text": "ACTIVE" } }, "type": "value" }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 4, "w": 24, "x": 0, "y": 54 },
+      "id": 24,
+      "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "title": "Spark Streaming Recovery Status & End-to-End Pipeline Health",
+      "type": "stat",
+      "targets": [{ "query": "from(bucket: \"parking\") |> range(start: -2m) |> filter(fn: (r) => r._measurement == \"stream_performance\") |> count() |> map(fn: (r) => ({ r with _value: if r._value > 0 then 1 else 0 }))", "refId": "A" }]
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 39,
+  "tags": ["stream-processing", "spark", "kafka", "smart-parking", "rvce"],
+  "time": { "from": "now-1h", "to": "now" },
+  "timepicker": { "refresh_intervals": ["5s", "10s", "30s", "1m", "5m"] },
+  "timezone": "browser",
+  "title": "Smart Parking Occupancy Analytics — Bengaluru",
+  "uid": "smart-parking-overview",
+  "version": 1
+}

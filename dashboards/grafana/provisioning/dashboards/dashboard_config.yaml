@@ -1,0 +1,12 @@
+apiVersion: 1
+
+providers:
+  - name: 'Smart Parking Dashboards'
+    orgId: 1
+    folder: 'Smart Parking Analytics'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 15
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards

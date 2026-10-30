@@ -1,0 +1,69 @@
+# Smart Parking Occupancy Analytics — .gitignore
+
+# ─── Python ───────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+*.whl
+.Python
+
+# ─── Virtual environments ────────────────────────────────────
+venv/
+env/
+.venv/
+.env/
+
+# ─── Environment variables ───────────────────────────────────
+.env
+!.env.example
+
+# ─── Checkpoints (large, transient) ─────────────────────────
+checkpoints/
+!checkpoints/.gitkeep
+
+# ─── Logs ────────────────────────────────────────────────────
+logs/
+*.log
+!logs/.gitkeep
+
+# ─── Benchmark outputs (keep generated report and plots) ───
+reports/benchmark_results/*.tmp
+!reports/benchmark_results/*.csv
+!reports/plots/*.png
+!reports/plots/*.pdf
+!reports/generated_reports/*.md
+
+# ─── Datasets ────────────────────────────────────────────────
+datasets/raw/*.tmp
+!datasets/raw/bengaluru_parking_locations.json
+!datasets/raw/melbourne_sensors_2019_sample.csv
+
+# ─── Spark ──────────────────────────────────────────────────
+derby.log
+metastore_db/
+spark-warehouse/
+
+# ─── IDE ────────────────────────────────────────────────────
+.idea/
+.vscode/settings.json
+*.iml
+.DS_Store
+Thumbs.db
+
+# ─── Testing ────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# ─── Docker volumes (not tracked) ────────────────────────────
+docker-volumes/
+
+# ─── Ivy2 cache (Spark JAR downloads) ───────────────────────
+.ivy2/

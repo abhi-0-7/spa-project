@@ -1,0 +1,90 @@
+[
+  {
+    "lot_id": "LOT_KORAMANGALA_01",
+    "name": "Koramangala 5th Block Parking",
+    "zone_id": "ZONE_SOUTH",
+    "city": "Bengaluru",
+    "latitude": 12.9352,
+    "longitude": 77.6245,
+    "capacity": 120,
+    "lot_type": "surface",
+    "source_attribution": "OpenCity.in / OpenStreetMap Bengaluru"
+  },
+  {
+    "lot_id": "LOT_INDIRANAGAR_01",
+    "name": "Indiranagar 100 Feet Road Parking",
+    "zone_id": "ZONE_EAST",
+    "city": "Bengaluru",
+    "latitude": 12.9716,
+    "longitude": 77.6412,
+    "capacity": 80,
+    "lot_type": "surface",
+    "source_attribution": "OpenCity.in / OpenStreetMap Bengaluru"
+  },
+  {
+    "lot_id": "LOT_WHITEFIELD_01",
+    "name": "Whitefield IT Park Parking",
+    "zone_id": "ZONE_EAST",
+    "city": "Bengaluru",
+    "latitude": 12.9698,
+    "longitude": 77.7500,
+    "capacity": 200,
+    "lot_type": "multi-level",
+    "source_attribution": "OpenCity.in / OpenStreetMap Bengaluru"
+  },
+  {
+    "lot_id": "LOT_MG_ROAD_01",
+    "name": "MG Road Metro Parking",
+    "zone_id": "ZONE_CENTRAL",
+    "city": "Bengaluru",
+    "latitude": 12.9756,
+    "longitude": 77.6097,
+    "capacity": 150,
+    "lot_type": "underground",
+    "source_attribution": "OpenCity.in / OpenStreetMap Bengaluru"
+  },
+  {
+    "lot_id": "LOT_JAYANAGAR_01",
+    "name": "Jayanagar 4th Block Parking",
+    "zone_id": "ZONE_SOUTH",
+    "city": "Bengaluru",
+    "latitude": 12.9308,
+    "longitude": 77.5836,
+    "capacity": 90,
+    "lot_type": "surface",
+    "source_attribution": "OpenCity.in / OpenStreetMap Bengaluru"
+  },
+  {
+    "lot_id": "LOT_HEBBAL_01",
+    "name": "Hebbal Flyover Parking",
+    "zone_id": "ZONE_NORTH",
+    "city": "Bengaluru",
+    "latitude": 13.0358,
+    "longitude": 77.5970,
+    "capacity": 110,
+    "lot_type": "surface",
+    "source_attribution": "OpenCity.in / OpenStreetMap Bengaluru"
+  },
+  {
+    "lot_id": "LOT_ELECTRONIC_CITY_01",
+    "name": "Electronic City Phase 1 Parking",
+    "zone_id": "ZONE_SOUTH",
+    "city": "Bengaluru",
+    "latitude": 12.8456,
+    "longitude": 77.6603,
+    "capacity": 180,
+    "lot_type": "multi-level",
+    "source_attribution": "OpenCity.in / OpenStreetMap Bengaluru"
+  },
+  {
+    "lot_id": "LOT_YELAHANKA_01",
+    "name": "Yelahanka New Town Parking",
+    "zone_id": "ZONE_NORTH",
+    "city": "Bengaluru",
+    "latitude": 13.1007,
+    "longitude": 77.5963,
+    "capacity": 70,
+    "lot_type": "surface",
+    "source_attribution": "OpenCity.in / OpenStreetMap Bengaluru"
+  }
+]

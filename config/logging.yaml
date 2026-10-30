@@ -1,0 +1,71 @@
+# ─────────────────────────────────────────────────────────────
+# Logging Configuration
+# Smart Parking Occupancy Analytics — AI372IA
+# ─────────────────────────────────────────────────────────────
+
+version: 1
+disable_existing_loggers: false
+
+formatters:
+  standard:
+    format: "%(asctime)s [%(levelname)s] %(name)s - %(message)s"
+    datefmt: "%Y-%m-%dT%H:%M:%S"
+  detailed:
+    format: "%(asctime)s [%(levelname)s] %(name)s:%(lineno)d - %(message)s"
+    datefmt: "%Y-%m-%dT%H:%M:%S"
+  json:
+    format: '{"time": "%(asctime)s", "level": "%(levelname)s", "logger": "%(name)s", "message": "%(message)s"}'
+    datefmt: "%Y-%m-%dT%H:%M:%S"
+
+handlers:
+  console:
+    class: logging.StreamHandler
+    level: INFO
+    formatter: standard
+    stream: ext://sys.stdout
+
+  file_all:
+    class: logging.handlers.RotatingFileHandler
+    level: DEBUG
+    formatter: detailed
+    filename: "./logs/parking_analytics.log"
+    maxBytes: 10485760  # 10 MB
+    backupCount: 5
+
+  file_errors:
+    class: logging.handlers.RotatingFileHandler
+    level: ERROR
+    formatter: detailed
+    filename: "./logs/errors.log"
+    maxBytes: 10485760
+    backupCount: 3
+
+loggers:
+  simulator:
+    level: INFO
+    handlers: [console, file_all]
+    propagate: false
+
+  ingestion:
+    level: INFO
+    handlers: [console, file_all]
+    propagate: false
+
+  streaming:
+    level: INFO
+    handlers: [console, file_all]
+    propagate: false
+
+  storage:
+    level: INFO
+    handlers: [console, file_all]
+    propagate: false
+
+  monitoring:
+    level: INFO
+    handlers: [console, file_all]
+    propagate: false
+
+root:
+  level: WARNING
+  handlers: [console, file_errors]
