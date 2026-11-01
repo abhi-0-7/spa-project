@@ -27,7 +27,7 @@ def main() -> None:
     base_dir = Path(__file__).resolve().parent.parent
 
     print("\n" + "=" * 65)
-    print("      SMART PARKING ANALYTICS — RESET UTILITY")
+    print("      SMART PARKING ANALYTICS -- RESET UTILITY")
     print("=" * 65)
 
     if not args.force:
@@ -46,7 +46,7 @@ def main() -> None:
                 shutil.rmtree(item)
             else:
                 item.unlink()
-        print("[✓] Spark checkpoints directory reset.")
+        print("[OK] Spark checkpoints directory reset.")
 
     # Clear logs
     logs_dir = base_dir / "logs"
@@ -58,12 +58,12 @@ def main() -> None:
                 shutil.rmtree(item)
             else:
                 item.unlink()
-        print("[✓] Runtime logs directory reset.")
+        print("[OK] Runtime logs directory reset.")
 
     if args.clear_data:
         print("[!] Note: To completely reset InfluxDB Docker volumes, execute: docker compose down -v")
 
-    print("[✓] Environment reset complete.\n")
+    print("[OK] Environment reset complete.\n")
 
 
 if __name__ == "__main__":
