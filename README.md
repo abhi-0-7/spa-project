@@ -1,8 +1,6 @@
 # Smart Parking Occupancy Analytics
 ## End-to-End Real-Time Stream Processing and Analytics System
 
-[![Course: AI372IA](https://img.shields.io/badge/Course-AI372IA%20Stream%20Processing%20%26%20Analytics-blue.svg)](https://github.com/abhi-0-7/spa-project)
-[![Institution: RVCE](https://img.shields.io/badge/Institution-RV%20College%20of%20Engineering%2C%20Bengaluru-red.svg)](https://rvce.edu.in)
 [![Python: 3.10+](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.13-brightgreen.svg)](https://python.org)
 [![Spark: 3.5.1](https://img.shields.io/badge/Apache%20Spark-3.5.1%20Structured%20Streaming-orange.svg)](https://spark.apache.org)
 [![Kafka: 3.7/3.9](https://img.shields.io/badge/Apache%20Kafka-KRaft%20Mode-black.svg)](https://kafka.apache.org)
@@ -15,9 +13,6 @@
 ## 1. Academic Identity & Course Context
 
 - **Course Title:** Stream Processing and Analytics
-- **Course Code:** AI372IA
-- **Institution:** RV College of Engineering, Bengaluru
-- **Department:** Artificial Intelligence and Machine Learning
 - **Repository:** [https://github.com/abhi-0-7/spa-project.git](https://github.com/abhi-0-7/spa-project.git)
 
 ### Academic Focus Disclaimer
