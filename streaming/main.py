@@ -209,12 +209,12 @@ def main() -> None:
     valid_stream = enriched_stream.filter(valid_condition)
     invalid_stream = enriched_stream.filter(~valid_condition)
 
-    # 4. Deduplication
-    deduped_stream = deduplicate_events(valid_stream, watermark_duration="10 minutes")
+    # 4. Event-Time Watermarking (Single authoritative watermark for deduplication and window aggregations)
+    watermarked_stream = apply_watermark(valid_stream, lateness=args.watermark)
 
-    # 5. Event-Time Watermarking
-    watermarked_stream = apply_watermark(deduped_stream, lateness=args.watermark)
-    classified_stream = classify_event_latency(watermarked_stream)
+    # 5. Stateful Deduplication (uses the watermarked stream to bound state)
+    deduped_stream = deduplicate_events(watermarked_stream, watermark_duration=None)
+    classified_stream = classify_event_latency(deduped_stream)
 
     # 6. Window Aggregations
     windows = create_all_window_aggregations(classified_stream)

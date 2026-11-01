@@ -41,7 +41,7 @@ DEFAULT_WATERMARK: Final[str] = "10 minutes"
 
 def deduplicate_events(
     df: DataFrame,
-    watermark_duration: str = DEFAULT_WATERMARK,
+    watermark_duration: str | None = None,
 ) -> DataFrame:
     """Remove duplicate parking events using event-time watermarking.
 
@@ -51,49 +51,48 @@ def deduplicate_events(
     window, Spark can safely evict old ``event_id`` entries from the hash set.
 
     .. important::
-        ``withWatermark`` **must** be called *before* ``dropDuplicates`` for
-        the state to be bounded.  Calling them in the wrong order causes Spark
-        to maintain unbounded state, eventually leading to OOM errors in
-        long-running jobs.
+        If the DataFrame already has a watermark applied (recommended via
+        ``event_time.apply_watermark``), pass ``watermark_duration=None`` so that
+        Spark does not attempt to redefine the watermark (disallowed in Spark 3.5+).
 
     Parameters
     ----------
     df:
         Streaming DataFrame containing at minimum ``event_id`` (StringType)
-        and ``event_timestamp`` (TimestampType) columns.
+        column and optionally ``event_timestamp``.
     watermark_duration:
-        How long past the current watermark Spark keeps deduplication state.
-        Examples: ``"10 minutes"``, ``"1 hour"``.  Defaults to
-        ``"10 minutes"``.
+        Optional duration string for watermark if not already watermarked.
+        Defaults to ``None``.
 
     Returns
     -------
     DataFrame
-        Deduplicated streaming DataFrame.  Late duplicate events (arriving
-        after the watermark) are silently dropped — this is the correct
-        behaviour for parking sensor data.
+        Deduplicated streaming DataFrame.
 
     Raises
     ------
     ValueError
-        If ``event_id`` or ``event_timestamp`` columns are missing.
+        If ``event_id`` column is missing.
 
     Examples
     --------
-    >>> deduped = deduplicate_events(flat_df, watermark_duration="5 minutes")
+    >>> deduped = deduplicate_events(watermarked_df)
     """
-    _require_columns(df, ["event_id", "event_timestamp"], "deduplicate_events")
+    _require_columns(df, ["event_id"], "deduplicate_events")
 
-    logger.info(
-        "Applying deduplication on event_id with watermark='%s'.",
-        watermark_duration,
-    )
-
-    deduped: DataFrame = (
-        df
-        .withWatermark("event_timestamp", watermark_duration)
-        .dropDuplicates(["event_id"])
-    )
+    if watermark_duration is not None and "event_timestamp" in df.columns:
+        logger.info(
+            "Applying deduplication on event_id with watermark='%s'.",
+            watermark_duration,
+        )
+        deduped: DataFrame = (
+            df
+            .withWatermark("event_timestamp", watermark_duration)
+            .dropDuplicates(["event_id"])
+        )
+    else:
+        logger.info("Applying deduplication on event_id on watermarked stream.")
+        deduped = df.dropDuplicates(["event_id"])
 
     logger.debug("Deduplication stage configured successfully.")
     return deduped

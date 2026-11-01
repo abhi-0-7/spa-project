@@ -56,9 +56,9 @@ def parse_arguments() -> argparse.Namespace:
     )
     parser.add_argument(
         "--mode",
-        choices=["normal", "high_load", "peak_hour", "fault_injection", "benchmark"],
+        choices=["normal", "high_load", "peak_hour", "fault_injection", "failure", "fault", "benchmark"],
         default="normal",
-        help="Operating simulation mode",
+        help="Operating simulation mode (failure / fault_injection injects duplicate, late, and invalid events)",
     )
     parser.add_argument(
         "--rate",
@@ -107,6 +107,10 @@ def run_simulator(args: argparse.Namespace) -> None:
     """Main simulation loop handling rates, publishing, and metrics."""
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
+
+    # Alias handling for user-friendly CLI flags
+    if args.mode in ("failure", "fault"):
+        args.mode = "fault_injection"
 
     logger.info("Initializing Smart Parking Simulator [Mode: %s]", args.mode)
 

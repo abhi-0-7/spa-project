@@ -132,9 +132,10 @@ def create_kafka_stream(spark: SparkSession, config: dict[str, Any]) -> DataFram
         # Value must come from the environment — never hardcoded.
         reader = reader.option("kafka.sasl.jaas.config", sasl_jaas_config)
 
-    # Optional: consumer group id for offset management in Kafka
-    group_id: str = kafka_cfg.get("group_id", "smart-parking-spark-consumer")
-    reader = reader.option("kafka.group.id", group_id)
+    # Optional: consumer group id for offset management in Kafka (only set if explicitly defined)
+    group_id: str = kafka_cfg.get("group_id", "")
+    if group_id:
+        reader = reader.option("kafka.group.id", group_id)
 
     # Optional: fetch timeout and session timeout
     fetch_max_wait_ms: int = int(kafka_cfg.get("fetch_max_wait_ms", 500))

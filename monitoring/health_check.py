@@ -99,32 +99,37 @@ def check_influxdb_health(
 
 
 def check_grafana_health(url: str = "http://localhost:3000") -> Dict[str, Any]:
-    """Inspects Grafana API health endpoint."""
-    try:
-        resp = requests.get(f"{url.rstrip('/')}/api/health", timeout=3)
-        if resp.status_code == 200:
-            data = resp.json()
-            return {
-                "service": "Grafana 10.4",
-                "status": "UP",
-                "endpoint": url,
-                "version": data.get("version", "10.4"),
-                "database": data.get("database", "ok"),
-                "error": None,
-            }
-        return {
-            "service": "Grafana 10.4",
-            "status": "UNHEALTHY",
-            "endpoint": url,
-            "error": f"HTTP {resp.status_code}",
-        }
-    except Exception as exc:
-        return {
-            "service": "Grafana 10.4",
-            "status": "DOWN",
-            "endpoint": url,
-            "error": str(exc),
-        }
+    """Inspects Grafana API health endpoint with multi-port auto-detection."""
+    candidate_urls = [url]
+    env_url = os.getenv("GRAFANA_URL")
+    if env_url and env_url not in candidate_urls:
+        candidate_urls.insert(0, env_url)
+    if "http://localhost:3001" not in candidate_urls:
+        candidate_urls.append("http://localhost:3001")
+
+    last_error = None
+    for cand_url in candidate_urls:
+        try:
+            resp = requests.get(f"{cand_url.rstrip('/')}/api/health", timeout=2)
+            if resp.status_code == 200:
+                data = resp.json()
+                return {
+                    "service": "Grafana 11.5",
+                    "status": "UP",
+                    "endpoint": cand_url,
+                    "version": data.get("version", "11.5"),
+                    "database": data.get("database", "ok"),
+                    "error": None,
+                }
+        except Exception as exc:
+            last_error = exc
+
+    return {
+        "service": "Grafana",
+        "status": "DOWN",
+        "endpoint": url,
+        "error": str(last_error),
+    }
 
 
 def check_spark_ui(url: str = "http://localhost:4040") -> Dict[str, Any]:
