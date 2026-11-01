@@ -105,8 +105,9 @@ $$\text{Availability}(t) = \text{Capacity} - \text{Occupancy}(t)$$
 Duplicate events injected by sensor retries or network reflection are intercepted using Spark's event-time deduplication:
 
 ```python
-deduped_df = df.withWatermark("event_timestamp", "10 minutes") \
-               .dropDuplicates(["event_id"])
+# Spark 3.5+ Single Authoritative Watermark Architecture
+watermarked_df = apply_watermark(valid_df, lateness="2 minutes")
+deduped_df = deduplicate_events(watermarked_df)  # Calls .dropDuplicates(["event_id"]) on watermarked stream
 ```
-- Deduplication state is maintained in Spark's RocksDB / HDFS state store.
-- The 10-minute watermark ensures that state for previously seen `event_id` keys is automatically evicted once it is impossible for a duplicate to arrive within the allowable lateness threshold.
+- Deduplication state is maintained in Spark's in-memory / checkpoint state store.
+- Reusing the single authoritative watermark bounds the deduplication state while preventing Spark 3.5's `AnalysisException: Redefining watermark is disallowed`.

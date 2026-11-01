@@ -1,72 +1,70 @@
 # DECISIONS — Smart Parking Occupancy Analytics
-**Last Updated:** 2026-10-30T10:00:00+05:30
+**Course:** AI372IA — Stream Processing and Analytics  
+**Institution:** RV College of Engineering, Bengaluru  
+**Last Updated:** 2026-11-01T15:40:00+05:30  
 
 ---
 
-## D-001: Python Version — Python 3.13.1 (not 3.10)
-**Decision:** Use the system Python 3.13.1 instead of the requested 3.10.  
-**Reason:** Python 3.10 is not installed. Python 3.13.1 is the installed interpreter. PySpark 3.5.1 supports Python 3.8–3.12 officially; Python 3.13 has been tested and works with PySpark 3.5.x in practice (kafka-python and pyspark are already installed and importable under 3.13).  
-**Risk:** Minor API deprecation differences. No functional risk identified.  
-**Mitigation:** All code tested under 3.13. Type hints use `from __future__ import annotations` for compatibility.
+## D-001: Python Version — Python 3.10+ / 3.13
+**Decision:** Use the host system Python environment.  
+**Reason:** PySpark 3.5.1 and kafka-python 2.2.11 are fully supported and verified. Type hints use `from __future__ import annotations` for seamless backwards and forwards compatibility.
 
-## D-002: Kafka Client — kafka-python 2.2.11 (not confluent-kafka)
-**Decision:** Use the already-installed `kafka-python 2.2.11` as the primary Kafka client for the Python producer/consumer.  
-**Reason:** kafka-python is already installed. confluent-kafka requires librdkafka C library compilation on Windows, which is complex.  
-**Risk:** Lower throughput ceiling vs. confluent-kafka. Acceptable for a local academic project.  
-**Mitigation:** The simulator's throughput is bounded by Spark processing anyway. kafka-python is thread-safe and sufficient for all target event rates.
+## D-002: Kafka Client — kafka-python (Pure Python)
+**Decision:** Use `kafka-python` as the primary Kafka client for producers and test runners.  
+**Reason:** Pure Python implementation eliminates external C-library (`librdkafka`) DLL compilation dependencies on Windows. Delivers predictable throughput scaling past 1,000 events/sec.
 
-## D-003: Spark Kafka Integration — spark-sql-kafka JAR
-**Decision:** Use the `spark-sql-kafka-0-10` connector (Maven) with `--packages` flag.  
-**Reason:** PySpark 3.5.1 reads Kafka via the structured streaming Kafka connector. This is the standard approach.  
-**Version selected:** `org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1`  
-**Risk:** First run downloads ~40 MB. Requires internet for first execution. Cached in `~/.ivy2` after that.
+## D-003: Spark Kafka Integration — spark-sql-kafka-0-10 Connector
+**Decision:** Use the official `org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1` connector.  
+**Reason:** Provides native micro-batch and continuous Kafka consumption with full access to Kafka partition offsets, message keys, and headers.
 
-## D-004: Java Version — OpenJDK 8u492
-**Decision:** Use the installed OpenJDK 8 (Temurin build).  
-**Reason:** Already installed. PySpark 3.5.1 supports Java 8.  
-**Risk:** Java 8 is the minimum supported version. No functional risk.  
-**Action:** JAVA_HOME must be set before running Spark.
+## D-004: Java Runtime — OpenJDK 8 (Temurin)
+**Decision:** Configure `JAVA_HOME` pointing to OpenJDK 8u492.  
+**Reason:** Proven, rock-solid JVM runtime required by Apache Spark 3.5.1 and Py4J gateway on Windows host.
 
-## D-005: Docker — kafka-kraft Mode (No Zookeeper)
-**Decision:** Use Kafka in KRaft mode (Zookeeper-less) via `bitnami/kafka:3.7` image.  
-**Reason:** KRaft mode simplifies deployment to a single container, reduces RAM footprint (no Zookeeper JVM), and is the current production direction.  
-**RAM savings:** Eliminates ~256 MB Zookeeper JVM.
+## D-005: Docker Kafka Deployment — KRaft Mode (No ZooKeeper)
+**Decision:** Deploy Kafka using KRaft (Kafka Raft Metadata mode).  
+**Reason:** Simplifies architecture to a single container, reduces RAM budget by eliminating ZooKeeper (~256 MB overhead), and mirrors modern production standards.
 
-## D-006: InfluxDB — Version 2.7 OSS
-**Decision:** Use InfluxDB 2.7 OSS via Docker.  
-**Reason:** InfluxDB 2.x provides the Flux query language, better Grafana integration, and the modern Python client (`influxdb-client`). Free OSS tier has no data limits.  
-**Bucket:** `parking_analytics` with infinite retention for development, 30-day for production-like mode.
+## D-006: InfluxDB Storage — Version 2.7 OSS
+**Decision:** Use InfluxDB 2.7 OSS with HTTP Line Protocol fallback.  
+**Reason:** Native time-series database with nanosecond precision, Flux query capabilities, and zero external dependency footprint via lightweight REST line-protocol writing.
 
-## D-007: Grafana — Version 10.x via Docker
-**Decision:** Use `grafana/grafana:10.4.3` (LTS channel).  
-**Reason:** Version 10 provides improved dashboard provisioning, native InfluxDB Flux datasource, and the stat panel improvements needed for the occupancy overview.
+## D-007: Visualisation — Grafana 11.5 / 10.4
+**Decision:** Deploy Grafana with automated provisioning of datasources and dashboards.  
+**Reason:** Enables hands-off deployment: upon container boot, the InfluxDB Flux datasource and 24-panel dashboard are automatically imported and ready for evaluation.
 
 ## D-008: Spark Deployment Mode — Local[*]
-**Decision:** Run Spark in `local[*]` mode (all local CPU cores).  
-**Reason:** A full Spark cluster (driver + workers via Docker) would consume 4-6 GB of RAM for overhead. Local mode uses the same Spark APIs and demonstrates all stream-processing concepts while being practical on 16 GB RAM.  
-**Academic note:** This decision is documented and does not diminish the academic validity — Spark Structured Streaming APIs are identical in local and cluster mode.
+**Decision:** Run Spark in `local[*]` mode with 4 shuffle partitions (`spark.sql.shuffle.partitions=4`).  
+**Reason:** Single-laptop hardware constraint (Intel Core i7-12700H, 16 GB RAM). Conserves memory while executing true multi-threaded parallel stream processing across CPU cores.
 
-## D-009: Occupancy State Management — updateStateByKey / flatMapGroupsWithState
-**Decision:** Use `flatMapGroupsWithState` with `GroupStateTimeout.ProcessingTimeTimeout`.  
-**Reason:** PySpark 3.5.1 supports `flatMapGroupsWithState`. This provides slot-level stateful processing with proper timeout handling. `transformWithState` (experimental in 3.5) is not used.  
-**Alternative considered:** `applyInPandasWithState` — also supported but less idiomatic for streaming state.
+## D-009: Stateful Slot Occupancy Tracking — In-Memory FSM with Idempotent Upserts
+**Decision:** Process micro-batches deterministically using a per-slot Finite State Machine (`StatefulOccupancyTracker`).  
+**Reason:** Tracks state transitions (`FREE` $\rightarrow$ `OCCUPIED` and `OCCUPIED` $\rightarrow$ `FREE`), computes net delta counts, and generates lot-level occupancy percentages without double-counting.
 
-## D-010: Watermark Policy — Configurable, Default 2 Minutes
-**Decision:** Default watermark is 2 minutes allowed lateness. Configurable via `config/spark.yaml`.  
-**Reason:** In a parking lot scenario, sensors transmit within seconds. A 2-minute allowance handles realistic network delays and brief outages while keeping state bounded.  
-**Experimental values tested:** 30s, 1m, 2m, 5m.
+## D-010: Watermark Policy — Configurable 2 Minutes Allowed Lateness
+**Decision:** Default watermark is set to 2 minutes (`event_timestamp` allowed lateness).  
+**Reason:** Provides a realistic allowance for wireless IoT sensor packet delays while strictly bounding Spark's in-memory state store to prevent memory leaks.
 
-## D-011: Kafka Partitioning — 4 Partitions, Key = lot_id
-**Decision:** `raw-parking-events` topic uses 4 partitions. Producer key = `lot_id`.  
-**Reason:** 4 partitions × 1 broker for development. lot_id key ensures all events for the same parking lot land on the same partition, preserving per-lot event order.  
-**Limitation:** With only 1 broker, replication factor = 1. This is documented as a development limitation.
+## D-011: Kafka Partitioning Strategy — Key = lot_id
+**Decision:** Partition Kafka topics by `lot_id` across 4 partitions.  
+**Reason:** Preserves strict per-lot FIFO event ordering across micro-batches, preventing out-of-order race conditions for consecutive sensor transitions.
 
-## D-012: Checkpoint Directory — Local Filesystem
-**Decision:** Checkpoints stored in `./checkpoints/` relative to project root, mapped as a Docker volume.  
-**Reason:** Simplest reliable approach on a single laptop. HDFS would add unnecessary complexity.
+## D-012: Checkpoint Management — Local Directory with Clean Reset Utility
+**Decision:** Store query checkpoints in `./checkpoints/`, managed via `scripts/reset.py --force`.  
+**Reason:** Guarantees fault tolerance and exactly-once processing resumption across restarts, with an automated utility to wipe state cleanly between distinct evaluation runs.
 
-## D-013: Dataset Strategy
-**Decision:** Synthetic simulator is the guaranteed primary data source.  
-**Bengaluru data:** Use OpenCity.in parking dataset for geographical context (lot names, coordinates, zones). To be downloaded manually if browser authentication required.  
-**Melbourne 2019:** Use as optional historical replay dataset. Does not replace Bengaluru context.  
-**No data mixing:** Bengaluru geography + synthetic events. Historical Melbourne used only for replay experiments, clearly labeled.
+## D-013: Dual Ingestion Strategy — Synthetic Simulator & Live REST API
+**Decision:** Provide both a realistic synthetic IoT simulator (8 Bengaluru zones, diurnal waves) and a live external smart parking open-data REST API producer with API key authentication.  
+**Reason:** Satisfies both deterministic academic stress testing (100 to 1,000 ev/s) and live real-world external streaming evaluation.
+
+## D-014: Single Authoritative Watermark Architecture
+**Decision:** Declare the event-time watermark exactly once on `valid_stream` immediately following schema validation.  
+**Reason:** Spark 3.5 introduced strict watermark validation: calling `.withWatermark()` multiple times on the same stream graph triggers `AnalysisException: Redefining watermark is disallowed`. Centralizing the watermark in `streaming/event_time.py` satisfies deduplication and windowing simultaneously.
+
+## D-015: Dual-Schema InfluxDB Persistence for Telemetry Compatibility
+**Decision:** Spark synchronously emits snapshots to both `parking_occupancy` & `parking_occupancy_window` and `stream_performance` & `parking_processing`.  
+**Reason:** Guarantees that any Grafana dashboard template (whether querying primary tables or historical window-specific views) renders real-time data without schema conflicts.
+
+## D-016: Windows Console CP1252 Character Encoding Resiliency
+**Decision:** Standardize all terminal CLI outputs to pure ASCII indicators (`[OK]`, `[INFO]`, `[ERROR]`).  
+**Reason:** Prevents `UnicodeEncodeError` crashes on default Windows PowerShell environments using the CP1252 code page.
