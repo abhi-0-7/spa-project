@@ -283,28 +283,63 @@ def main() -> None:
 
             # Write updated lot occupancy snapshots to InfluxDB
             if not state_pdf.empty:
+                # Add aliases so both dashboard schemas (parking_occupancy and parking_occupancy_window) work
+                state_pdf["current_occupancy"] = state_pdf["occupied_slots"]
+                state_pdf["available_capacity"] = state_pdf["available_slots"]
+                state_pdf["window_type"] = "1m_tumbling"
+                state_pdf["entries"] = state_pdf["batch_entries"]
+                state_pdf["exits"] = state_pdf["batch_exits"]
+                state_pdf["maximum_occupancy"] = state_pdf["occupied_slots"]
+                state_pdf["average_occupancy"] = state_pdf["occupancy_percentage"]
+
+                # 1. Primary measurement
                 influx_client.write_dataframe_batch(
                     df=state_pdf,
                     measurement="parking_occupancy",
-                    tag_columns=["lot_id", "zone_id", "city"],
+                    tag_columns=["lot_id", "zone_id", "city", "window_type"],
                     field_columns=["occupied_slots", "available_slots", "capacity",
                                    "occupancy_percentage", "batch_entries", "batch_exits",
-                                   "total_entries", "total_exits"],
+                                   "total_entries", "total_exits", "current_occupancy",
+                                   "available_capacity"],
+                    time_column="timestamp",
+                )
+
+                # 2. Window measurement alias for Grafana dashboard compatibility
+                influx_client.write_dataframe_batch(
+                    df=state_pdf,
+                    measurement="parking_occupancy_window",
+                    tag_columns=["lot_id", "zone_id", "city", "window_type"],
+                    field_columns=["current_occupancy", "available_capacity", "capacity",
+                                   "occupancy_percentage", "entries", "exits",
+                                   "maximum_occupancy", "average_occupancy"],
                     time_column="timestamp",
                 )
 
             # Write stream performance telemetry
             duration_s = max(0.001, time.perf_counter() - t0)
             throughput = len(pdf) / duration_s
+            proc_delay_ms = duration_s * 1000.0
+
             influx_client.write_performance_metric(
                 events_per_second=throughput,
-                processing_delay_ms=duration_s * 1000.0,
-                batch_duration_ms=duration_s * 1000.0,
+                processing_delay_ms=proc_delay_ms,
+                batch_duration_ms=proc_delay_ms,
                 invalid_count=0,
                 duplicate_count=0,
                 late_count=0,
                 total_processed=len(pdf),
                 kafka_lag=0,
+                timestamp=datetime.now(),
+            )
+
+            influx_client.write_processing_telemetry(
+                events_per_second=throughput,
+                latency_ms=proc_delay_ms,
+                batch_duration_ms=proc_delay_ms,
+                input_rows=len(pdf),
+                invalid_count=0,
+                duplicate_count=0,
+                late_count=0,
                 timestamp=datetime.now(),
             )
             logger.info("Batch %d: Processed %d events in %.2fs (%.1f ev/s)",

@@ -332,6 +332,34 @@ class ParkingInfluxClient:
         )
         return self.write_points([point])
 
+    def write_processing_telemetry(
+        self,
+        events_per_second: float,
+        latency_ms: float,
+        batch_duration_ms: float,
+        input_rows: int,
+        invalid_count: int = 0,
+        duplicate_count: int = 0,
+        late_count: int = 0,
+        timestamp: Optional[datetime] = None,
+    ) -> bool:
+        """Write parking_processing measurement for Grafana dashboard compatibility."""
+        ts = timestamp or datetime.now()
+        point = (
+            Point("parking_processing")
+            .tag("pipeline", "spark_streaming")
+            .field("events_per_second", float(events_per_second))
+            .field("average_event_latency_ms", float(latency_ms))
+            .field("batch_duration_ms", float(batch_duration_ms))
+            .field("input_rows", int(input_rows))
+            .field("invalid_events", int(invalid_count))
+            .field("duplicate_events", int(duplicate_count))
+            .field("late_events", int(late_count))
+            .field("checkpoint_configured", 1)
+            .time(ts, WritePrecision.NANOSECONDS)
+        )
+        return self.write_points([point])
+
     def write_points(self, points: List[Point]) -> bool:
         """Write a list of Point objects."""
         if not points:
