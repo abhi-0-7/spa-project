@@ -318,10 +318,3 @@ smart-parking-analytics/
 ```
 
 ---
-
-## 9. Academic Attribution & License
-
-- **Course:** AI372IA — Stream Processing and Analytics
-- **Institution:** RV College of Engineering, Bengaluru
-- **Department:** Artificial Intelligence and Machine Learning
-- **License:** Open Academic Resource under Apache License 2.0.
